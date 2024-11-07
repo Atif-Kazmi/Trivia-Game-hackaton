@@ -152,5 +152,5 @@ if st.session_state.question_number > 5:  # End the game after 5 questions
     st.write("Game Over!")
     st.markdown(f"<div class='score'>Final Score: {st.session_state.score}/5</div>", unsafe_allow_html=True)
 else:
-    if st.button("Next Question"):
+    if st.button("Next Question", key="next_question"):
         st.session_state.time_left = 30  # Reset timer for next question
