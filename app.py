@@ -85,9 +85,9 @@ def get_trivia_question(difficulty):
 # Timer animation
 def countdown_timer(seconds):
     for i in range(seconds, 0, -1):
-        st.markdown(f"<div class='countdown'>Time left: {i}s</div>", unsafe_allow_html=True)
-        time.sleep(1)
-        st.experimental_rerun()  # Use this to force a re-run each second
+        st.session_state.time_left = i  # Store time left in session state
+        time.sleep(1)  # Wait for a second before updating
+        st.experimental_rerun()  # Force rerun
 
 # Display choices with hover effects
 def display_choices_with_emojis(choices):
@@ -136,8 +136,12 @@ def start_game():
         question, choices, correct_answer = question_data
         st.markdown(f"<div class='question'>{question}</div>", unsafe_allow_html=True)
         
+        # Initialize time left if it's not set
+        if 'time_left' not in st.session_state:
+            st.session_state.time_left = 30
+        
         # Show timer and start countdown
-        countdown_timer(30)
+        countdown_timer(st.session_state.time_left)
         
         user_answer = display_choices_with_emojis(choices)
         
