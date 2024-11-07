@@ -80,13 +80,13 @@ def play_sound(file_path):
         st.write(f"Sound file '{file_path}' not found.")
 
 # Display choices with hover effects and unique keys
-def display_choices_with_emojis(choices):
+def display_choices_with_emojis(choices, question_number):
     emoji_choices = ['🔴', '🟢', '🟡', '🔵']
     button_columns = st.columns(2)  # Create 2 columns for choices
     for idx, choice in enumerate(choices):
         with button_columns[idx % 2]:  # Alternate buttons between two columns
-            # Assign a unique key to each button based on index
-            if st.button(f"{emoji_choices[idx]} {choice}", key=f"choice_{idx}"):
+            # Assign a unique key to each button using question number and index
+            if st.button(f"{emoji_choices[idx]} {choice}", key=f"choice_{question_number}_{idx}"):
                 return choice
     return None
 
@@ -130,8 +130,8 @@ st.subheader(f"Question {st.session_state.question_number}")
 st.markdown(f"<div class='question'>{st.session_state.question}</div>", unsafe_allow_html=True)
 st.markdown(f"<div class='countdown'>Time Left: {st.session_state.time_left} seconds</div>", unsafe_allow_html=True)
 
-# Display answer choices
-user_answer = display_choices_with_emojis(st.session_state.choices)
+# Display answer choices with unique keys for each question and choice
+user_answer = display_choices_with_emojis(st.session_state.choices, st.session_state.question_number)
 
 # Check the answer and update score
 if user_answer:
