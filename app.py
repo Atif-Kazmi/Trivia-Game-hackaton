@@ -3,6 +3,7 @@ import requests
 import random
 import time
 from io import BytesIO
+import os
 
 # Custom CSS for styling
 st.markdown("""
@@ -69,11 +70,14 @@ def get_trivia_question(difficulty):
     random.shuffle(choices)
     return question, choices, correct_answer
 
-# Function to play sound effects
+# Function to play sound effects if the file exists
 def play_sound(file_path):
-    audio_file = open(file_path, 'rb').read()
-    audio_bytes = BytesIO(audio_file)
-    st.audio(audio_bytes, format="audio/wav")
+    if os.path.exists(file_path):
+        audio_file = open(file_path, 'rb').read()
+        audio_bytes = BytesIO(audio_file)
+        st.audio(audio_bytes, format="audio/mp3")
+    else:
+        st.write(f"Sound file '{file_path}' not found.")
 
 # Display choices with hover effects
 def display_choices_with_emojis(choices):
@@ -91,6 +95,7 @@ if 'question_number' not in st.session_state:
     st.session_state.score = 0
     st.session_state.time_left = 30
     st.session_state.correct_answer = None
+    st.session_state.use_sound = True  # Default to using sound
 
 # Timer countdown logic
 if st.session_state.time_left > 0:
@@ -105,6 +110,9 @@ Welcome to the Trivia Game!
 - You will get points for correct answers. 
 - Your score will be displayed at the end of the game.
 """)
+
+# Toggle sound effects
+st.session_state.use_sound = st.checkbox("Enable Sound Effects", value=True)
 
 # Choose difficulty level
 difficulty = st.radio("Select Difficulty Level", ["Easy", "Medium", "Hard"])
@@ -128,10 +136,12 @@ user_answer = display_choices_with_emojis(st.session_state.choices)
 if user_answer:
     if user_answer == st.session_state.correct_answer:
         st.session_state.score += 1
-        play_sound('correct_answer.wav')
+        if st.session_state.use_sound:
+            play_sound('correct-156911.mp3')
         st.write("Correct!")
     else:
-        play_sound('wrong_answer.wav')
+        if st.session_state.use_sound:
+            play_sound('wrong-answer-129254.mp3')
         st.write(f"Wrong! The correct answer was {st.session_state.correct_answer}.")
     st.session_state.question_number += 1
 
