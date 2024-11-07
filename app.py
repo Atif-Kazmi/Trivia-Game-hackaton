@@ -4,7 +4,7 @@ import random
 import time
 from io import BytesIO
 
-# Add Custom CSS for styling
+# Custom CSS for styling
 st.markdown("""
     <style>
     body {
@@ -47,10 +47,6 @@ st.markdown("""
         color: #f5a623;
         margin: 20px;
     }
-    .progress {
-        height: 20px;
-        background-color: #ff6f61;
-    }
     .countdown {
         font-size: 18px;
         text-align: center;
@@ -59,35 +55,25 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Sound Effect Function
-def play_sound(file_path):
-    audio_file = open(file_path, 'rb').read()
-    audio_bytes = BytesIO(audio_file)
-    st.audio(audio_bytes, format="audio/wav")
-
-# Fetch trivia question from OTDB
+# Function to fetch trivia question
 def get_trivia_question(difficulty):
     url = f"https://opentdb.com/api.php?amount=1&difficulty={difficulty.lower()}&type=multiple"
     response = requests.get(url)
-    
     if response.status_code != 200 or not response.json()['results']:
         return None
-    
     data = response.json()['results'][0]
     question = data['question']
     correct_answer = data['correct_answer']
     choices = data['incorrect_answers']
     choices.append(correct_answer)
     random.shuffle(choices)
-    
     return question, choices, correct_answer
 
-# Timer animation
-def countdown_timer(seconds):
-    for i in range(seconds, 0, -1):
-        st.session_state.time_left = i  # Store time left in session state
-        time.sleep(1)  # Wait for a second before updating
-        st.experimental_rerun()  # Force rerun
+# Function to play sound effects
+def play_sound(file_path):
+    audio_file = open(file_path, 'rb').read()
+    audio_bytes = BytesIO(audio_file)
+    st.audio(audio_bytes, format="audio/wav")
 
 # Display choices with hover effects
 def display_choices_with_emojis(choices):
@@ -99,75 +85,61 @@ def display_choices_with_emojis(choices):
                 return choice
     return None
 
-# Add Leaderboard with Progress Bar
-def leaderboard_with_progress_bar(leaderboard):
-    leaderboard_sorted = sorted(leaderboard, reverse=True)
-    for i, score in enumerate(leaderboard_sorted):
-        st.markdown(f"<div class='leaderboard'>{i+1}. Score: {score}</div>", unsafe_allow_html=True)
-        progress = score / max(leaderboard_sorted) * 100
-        st.progress(progress)
+# Initialize session state variables
+if 'question_number' not in st.session_state:
+    st.session_state.question_number = 1
+    st.session_state.score = 0
+    st.session_state.time_left = 30
+    st.session_state.correct_answer = None
 
-# Start the game
-def start_game():
-    st.title("AI-Powered Virtual Trivia Game")
-    st.write("""
-    Welcome to the Trivia Game! 
-    - Choose your difficulty level and try to answer the questions as fast as you can.
-    - You will get points for correct answers. 
-    - Your score will be displayed at the end of the game.
-    """)
+# Timer countdown logic
+if st.session_state.time_left > 0:
+    st.session_state.time_left -= 1
+    time.sleep(1)
 
-    # Choose difficulty level
-    difficulty = st.radio("Select Difficulty Level", ["Easy", "Medium", "Hard"])
-    
-    score = 0
-    num_questions = 5
-    question_number = 1
-    leaderboard = []
+# Display title and instructions
+st.title("AI-Powered Virtual Trivia Game")
+st.write("""
+Welcome to the Trivia Game! 
+- Choose your difficulty level and try to answer the questions as fast as you can.
+- You will get points for correct answers. 
+- Your score will be displayed at the end of the game.
+""")
 
-    while question_number <= num_questions:
-        st.subheader(f"Question {question_number}")
-        
-        question_data = get_trivia_question(difficulty)
-        if question_data is None:
-            st.write("Error fetching question, please try again.")
-            break
-        
-        question, choices, correct_answer = question_data
-        st.markdown(f"<div class='question'>{question}</div>", unsafe_allow_html=True)
-        
-        # Initialize time left if it's not set
-        if 'time_left' not in st.session_state:
-            st.session_state.time_left = 30
-        
-        # Show timer and start countdown
-        countdown_timer(st.session_state.time_left)
-        
-        user_answer = display_choices_with_emojis(choices)
-        
-        # Play sound for correct or wrong answer
-        if user_answer == correct_answer:
-            play_sound('correct_answer.wav')
-            score += 1
-            st.write("Correct!")
-        else:
-            play_sound('wrong_answer.wav')
-            st.write(f"Wrong! The correct answer was {correct_answer}.")
-        
-        question_number += 1
+# Choose difficulty level
+difficulty = st.radio("Select Difficulty Level", ["Easy", "Medium", "Hard"])
 
-    # Add score to leaderboard
-    leaderboard.append(score)
-    
-    st.subheader(f"Game Over! Your Score: {score}/{num_questions}")
-    
-    # Show dynamic leaderboard
-    leaderboard_with_progress_bar(leaderboard)
+# Load a new question
+if 'question' not in st.session_state or st.button("Next Question"):
+    question_data = get_trivia_question(difficulty)
+    if question_data is not None:
+        st.session_state.question, st.session_state.choices, st.session_state.correct_answer = question_data
+        st.session_state.time_left = 30  # Reset timer for each question
 
-    # Display game results
+# Display question and countdown timer
+st.subheader(f"Question {st.session_state.question_number}")
+st.markdown(f"<div class='question'>{st.session_state.question}</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='countdown'>Time Left: {st.session_state.time_left} seconds</div>", unsafe_allow_html=True)
+
+# Display answer choices
+user_answer = display_choices_with_emojis(st.session_state.choices)
+
+# Check the answer and update score
+if user_answer:
+    if user_answer == st.session_state.correct_answer:
+        st.session_state.score += 1
+        play_sound('correct_answer.wav')
+        st.write("Correct!")
+    else:
+        play_sound('wrong_answer.wav')
+        st.write(f"Wrong! The correct answer was {st.session_state.correct_answer}.")
+    st.session_state.question_number += 1
+
+# Display score and next question button
+st.subheader(f"Your Current Score: {st.session_state.score}")
+if st.session_state.question_number > 5:  # End the game after 5 questions
     st.write("Game Over!")
-    st.markdown(f"<div class='score'>Your Final Score: {score}/{num_questions}</div>", unsafe_allow_html=True)
-
-# Run the app
-if __name__ == "__main__":
-    start_game()
+    st.markdown(f"<div class='score'>Final Score: {st.session_state.score}/5</div>", unsafe_allow_html=True)
+else:
+    if st.button("Next Question"):
+        st.session_state.time_left = 30  # Reset timer for next question
