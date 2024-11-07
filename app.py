@@ -87,7 +87,7 @@ def countdown_timer(seconds):
     for i in range(seconds, 0, -1):
         st.markdown(f"<div class='countdown'>Time left: {i}s</div>", unsafe_allow_html=True)
         time.sleep(1)
-        st.experimental_rerun()
+        st.experimental_rerun()  # Use this to force a re-run each second
 
 # Display choices with hover effects
 def display_choices_with_emojis(choices):
