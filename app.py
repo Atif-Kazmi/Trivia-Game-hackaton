@@ -79,13 +79,14 @@ def play_sound(file_path):
     else:
         st.write(f"Sound file '{file_path}' not found.")
 
-# Display choices with hover effects
+# Display choices with hover effects and unique keys
 def display_choices_with_emojis(choices):
     emoji_choices = ['🔴', '🟢', '🟡', '🔵']
     button_columns = st.columns(2)  # Create 2 columns for choices
     for idx, choice in enumerate(choices):
         with button_columns[idx % 2]:  # Alternate buttons between two columns
-            if st.button(f"{emoji_choices[idx]} {choice}", key=idx):
+            # Assign a unique key to each button based on index
+            if st.button(f"{emoji_choices[idx]} {choice}", key=f"choice_{idx}"):
                 return choice
     return None
 
